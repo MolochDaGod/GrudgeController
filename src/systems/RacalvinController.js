@@ -409,7 +409,7 @@ export class RacalvinController {
     this.input.rollLeft = false; // Will be set by double-tap detection
     this.input.rollRight = false; // Will be set by double-tap detection
     this.input.interact = this.keys.has("keye") || this.keys.has("keyf");
-    this.input.targetLock = this.keys.has("keyz"); // Z for lock-on
+    this.input.targetLock = this.keys.has("tab"); // Tab for lock-on
     this.input.targetCycle = this.keys.has("keyx"); // X for cycle targets
 
     this.input.cUp = this.keys.has("keyi");

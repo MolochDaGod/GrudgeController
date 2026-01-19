@@ -580,13 +580,8 @@ class WarriorCombatDemo {
       if (this.warrior) {
         this.controller.applyToCharacter(this.warrior);
 
-        // Make character face locked target
-        const lockedTarget = this.controller.getLockedTarget();
-        if (lockedTarget && lockedTarget.position) {
-          const targetPos = lockedTarget.position.clone();
-          targetPos.y = this.warrior.position.y; // Keep same height
-          this.warrior.lookAt(targetPos);
-        }
+        // Make character face locked target (controller handles this internally)
+        // Don't override rotation here - it breaks movement animation sync
 
         // Play appropriate animation
         const animName = this.controller.getAnimationName();

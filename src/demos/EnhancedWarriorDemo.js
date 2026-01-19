@@ -8,13 +8,14 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { RacalvinController, DEFAULT_CONFIG } from "../systems/RacalvinController.js";
+import {
+  RacalvinController,
+  DEFAULT_CONFIG,
+} from "../systems/RacalvinController.js";
 import { GAME_CONFIG, validateConfig } from "../config/GameConfig.js";
-
-class WarriorCombatDemo {
-  constructor(customConfig = {}) {
-    // Merge custom config with defaults
-    this.config = { ...GAME_CONFIG, ...customConfig };
+import { ModularCharacterSystem } from "../systems/ModularCharacterSystem.js";
+import { EnemySpawnSystem } from "../systems/EnemySpawnSystem.js";
+import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
 
     // Validate configuration
     const validation = validateConfig(this.config);
@@ -51,6 +52,9 @@ class WarriorCombatDemo {
     this.lastAnimationSpeed = 1.0;
     this.animationFrameId = null;
 
+    // Animation debug UI
+    this.animDebugUI = null;
+
     this.init();
   }
 
@@ -74,7 +78,11 @@ class WarriorCombatDemo {
     this.setupUI();
 
     this.animate();
-    console.log("✓ Demo ready! Press Z to lock target, X to cycle targets");
+    
+    // Create animation debug UI
+    this.animDebugUI = new AnimationDebugUI(this);
+    
+    console.log("✓ Demo ready! Press Tab to lock target, X to cycle targets");
   }
 
   setupScene() {

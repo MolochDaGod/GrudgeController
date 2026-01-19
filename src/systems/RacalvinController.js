@@ -669,10 +669,29 @@ export class RacalvinController {
 
   updateCamera(delta) {
     const { cameraSensitivity, minPitch, maxPitch } = this.config;
+    const char = this.character;
 
-    this.camera.yaw -= this.input.cameraX * cameraSensitivity;
-    this.camera.pitch += this.input.cameraY * cameraSensitivity;
+    // Only allow free-look when RMB (block) is held
+    if (this.input.block) {
+      // Free-look mode with RMB
+      this.camera.yaw -= this.input.cameraX * cameraSensitivity;
+      this.camera.pitch += this.input.cameraY * cameraSensitivity;
+    } else {
+      // Auto-follow behind character
+      // Smoothly rotate camera to follow character's facing direction
+      const targetYaw = char.faceAngle + Math.PI; // Behind character
+      let yawDiff = targetYaw - this.camera.yaw;
+      
+      // Normalize angle difference
+      while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+      while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+      
+      // Smooth camera rotation to follow character
+      const followSpeed = 3.0; // How fast camera follows
+      this.camera.yaw += yawDiff * followSpeed * delta;
+    }
 
+    // Keyboard camera controls (always available)
     const cButtonSpeed = DEG2RAD * 45;
     if (this.input.cLeft && !this.prevInput.cLeft)
       this.camera.yaw += cButtonSpeed;

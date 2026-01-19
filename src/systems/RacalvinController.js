@@ -1521,7 +1521,8 @@ export class RacalvinController {
       } else if (char.isFalling) {
         char.state = "fall";
       }
-    } else if (char.forwardVel > this.config.walkSpeed + 0.5) {
+    } else {
+      if (char.forwardVel > this.config.walkSpeed + 0.5) {
         char.state = "run";
       } else if (char.forwardVel > 0.5) {
         char.state = "walk";
@@ -1552,7 +1553,6 @@ export class RacalvinController {
         } else {
           char.state = `idle${char.idleVariation}`;
         }
-      }
       }
     }
 

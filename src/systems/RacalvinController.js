@@ -642,7 +642,7 @@ export class RacalvinController {
       if (char.combatMode && char.lockedTarget) {
         // COMBAT MODE: Strafe around target (A/D circle, W/S forward/back)
         // Character always faces target, movement is relative to target
-        char.intendedYaw = this.camera.yaw + stickAngle;
+        char.intendedYaw = this.camera.yaw + stickAngle + Math.PI;
         char.isWalkingBack = moveY < 0;
         
         // Force character to face target
@@ -655,11 +655,11 @@ export class RacalvinController {
         char.faceAngle = Math.atan2(toTarget.x, toTarget.z);
       } else if (char.isBlocking) {
         // When blocking (non-combat), allow circle strafing
-        char.intendedYaw = this.camera.yaw + stickAngle;
+        char.intendedYaw = this.camera.yaw + stickAngle + Math.PI;
         char.isWalkingBack = moveY < 0;
       } else {
         // Normal movement: W moves away from camera
-        char.intendedYaw = this.camera.yaw + stickAngle;
+        char.intendedYaw = this.camera.yaw + stickAngle + Math.PI;
         
         // Determine if walking backward (S key, moveY < 0)
         char.isWalkingBack = moveY < -0.1;

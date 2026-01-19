@@ -1,0 +1,160 @@
+Folder PATH listing
+Volume serial number is 44E6-8069
+E:.
+|   package.json
+|   START.bat
+|   test.html
+|   warrior.html
+|   enhanced.html
+|   index.html
+|   README.md
+|   structure.txt
+|   
++---Character
+|   +---Animations
+|   |       Jump--InAir.anim.fbx
+|   |       Jump--Jump.anim.fbx
+|   |       Locomotion--Run_N_Land.anim.fbx
+|   |       Locomotion--Run_N.anim.fbx
+|   |       Locomotion--Run_S.anim.fbx
+|   |       Locomotion--Walk_N_Land.anim.fbx
+|   |       Locomotion--Walk_N.anim.fbx
+|   |       Stand--Idle.anim.fbx
+|   |       
+|   \---Models
+|           Armature.fbx
+|           
++---Environment
+|   \---Art
+|       \---Models
+|               Box_350x250x200_Mesh.fbx
+|               Box_350x250x300_Mesh.fbx
+|               Ground_Mesh.fbx
+|               Ramp_100x100x200_Mesh.fbx
+|               Ramp_Mesh.fbx
+|               Stairs_200x100x200_Mesh.fbx
+|               Stairs_650_400_300_Mesh.fbx
+|               Structure_Mesh.fbx
+|               Tunnel_Mesh.fbx
+|               Wall_Mesh.fbx
+|               
++---RedNotRed
+|   \---3D Adaptive Parkour System
+|       \---Player
+|               Frank.fbx
+|               
++---Freeflow Combat
+|   \---Demo
+|       \---Models
+|           |   Character.fbx
+|           |   Character2.fbx
+|           |   Dummy.fbx
+|           |   Dummy2.fbx
+|           |   
+|           \---Animations
+|               |   Fight Stance.fbx
+|               |   
+|               +---Enemy
+|               |       Die.fbx
+|               |       Fight Idle.fbx
+|               |       Get Hit.fbx
+|               |       
+|               \---Player
+|                   |   Sprint.fbx
+|                   |   
+|                   +---Attacks
+|                   |       Back Kick.fbx
+|                   |       Kick.fbx
+|                   |       Punch.fbx
+|                   |       Roundhouse Kick.fbx
+|                   |       
+|                   \---Traversal
+|                           Jump Spin 2.fbx
+|                           Jump Spin.fbx
+|                           Side Flip.fbx
+|                           Spin.fbx
+|                           
++---src
+|   +---systems
+|   |       RacalvinController.js
+|   |       TargetLockSystem.js
+|   |       WeaponSystem.js
+|   |       CombatSystem.js
+|   |       
+|   +---config
+|   |       GameConfig.js
+|   |       warrior-config.json
+|   |       warrior-scene.json
+|   |       combat-scene.json
+|   |       
+|   \---demos
+|           EnhancedWarriorDemo.js
+|           WarriorDemo.js
+|           CombatDemo.js
+|           SimpleTest.js
+|           AttackMotionSystem.js
+|           ExampleUsage.js
+|           
++---public
+|   \---models
+|       \---RacalvinDaWarrior
+|               Meshy_AI_Orc_Warlord_Render_1220104017_texture_fbx.fbx
+|               sword and shield walk.fbx
+|               sword and shield run.fbx
+|               sword and shield jump.fbx
+|               sword and shield jump (2).fbx
+|               sword and shield strafe.fbx
+|               sword and shield strafe (2).fbx
+|               sword and shield walk (2).fbx
+|               sword and shield 180 turn.fbx
+|               sword and shield strafe (3).fbx
+|               sword and shield strafe (4).fbx
+|               sword and shield 180 turn (2).fbx
+|               sword and shield run (2).fbx
+|               sword and shield slash.fbx
+|               sword and shield slash (2).fbx
+|               sword and shield slash (3).fbx
+|               sword and shield slash (4).fbx
+|               sword and shield block.fbx
+|               sword and shield block idle.fbx
+|               sword and shield block (2).fbx
+|               sword and shield impact.fbx
+|               sword and shield impact (2).fbx
+|               sword and shield impact (3).fbx
+|               sword and shield crouch.fbx
+|               sword and shield crouching.fbx
+|               sword and shield crouch idle.fbx
+|               sword and shield slash (5).fbx
+|               sword and shield crouch block.fbx
+|               sword and shield crouch block idle.fbx
+|               sword and shield crouching (2).fbx
+|               sword and shield crouch block (2).fbx
+|               sword and shield crouching (3).fbx
+|               sword and shield attack.fbx
+|               sword and shield attack (2).fbx
+|               sword and shield attack (3).fbx
+|               sword and shield idle.fbx
+|               sword and shield idle (2).fbx
+|               sword and shield idle (3).fbx
+|               sword and shield kick.fbx
+|               sword and shield casting.fbx
+|               sword and shield attack (4).fbx
+|               sword and shield power up.fbx
+|               sword and shield death.fbx
+|               sword and shield death (2).fbx
+|               sword and shield turn.fbx
+|               sword and shield turn (2).fbx
+|               sword and shield idle (4).fbx
+|               sword and shield casting (2).fbx
+|               draw sword 1.fbx
+|               draw sword 2.fbx
+|               sheath sword 1.fbx
+|               sheath sword 2.fbx
+|               
+\---docs
+        README.md
+        SETUP.md
+        QUICKSTART.md
+        WARRIOR-GUIDE.md
+        ENHANCED-README.md
+        

@@ -482,19 +482,52 @@ class WarriorCombatDemo {
     }
   }
 
-  playAnimation(name, crossfadeDuration = 0.2) {
+  playAnimation(name, crossfadeDuration = null) {
     const anim = this.animations.get(name);
-    if (!anim || anim === this.currentAnimation) return;
+    if (!anim) return;
+    
+    // Don't interrupt same animation
+    if (anim === this.currentAnimation) {
+      // Still update animation speed for locomotion
+      if (name === "walk" || name === "run") {
+        const char = this.controller?.character;
+        if (char) {
+          const speedRatio =
+            Math.abs(char.forwardVel) /
+            (name === "run"
+              ? this.config.character.maxSpeed
+              : this.config.character.walkSpeed);
+          anim.timeScale = Math.max(0.5, Math.min(speedRatio * 1.2, 2.0));
+        }
+      }
+      return;
+    }
 
+    // Dynamic crossfade duration based on animation type
+    if (crossfadeDuration === null) {
+      // Locomotion blends quickly, combat actions slower
+      if (["idle", "walk", "run", "strafeLeft", "strafeRight"].includes(name)) {
+        crossfadeDuration = 0.2; // Fast blend for locomotion
+      } else if (["slash1", "slash2", "attack2", "kick", "block"].includes(name)) {
+        crossfadeDuration = 0.1; // Quick snap for attacks
+      } else {
+        crossfadeDuration = 0.3; // Default
+      }
+    }
+
+    // Crossfade from previous animation
     if (this.currentAnimation) {
       anim.reset();
       anim.crossFadeFrom(this.currentAnimation, crossfadeDuration, true);
     }
 
+    // Configure animation playback
+    anim.setLoop(THREE.LoopRepeat);
+    anim.clampWhenFinished = true;
     anim.play();
     this.currentAnimation = anim;
 
-    // Adjust animation speed based on movement for walk/run animations
+    // Adjust animation speed based on movement for locomotion
     if (name === "walk" || name === "run") {
       const char = this.controller?.character;
       if (char) {
@@ -570,10 +603,13 @@ class WarriorCombatDemo {
         // Update target health in UI
         if (this.enemies) {
           this.enemies.forEach((enemy) => {
+            // Health is stored in userData
+            const currentHealth = enemy.userData?.health ?? 100;
+            const maxHealth = enemy.userData?.maxHealth ?? 100;
             this.targetLockSystem.setTargetHealth(
               enemy,
-              enemy.currentHealth || enemy.userData.health,
-              enemy.maxHealth || enemy.userData.maxHealth,
+              currentHealth,
+              maxHealth,
             );
           });
         }
@@ -609,21 +645,46 @@ class WarriorCombatDemo {
   getMappedAnimation(controllerState) {
     // Map controller state to loaded animations
     const stateMap = {
+      idle: "idle",
       Idle: "idle",
+      walk: "walk",
       Walk: "walk",
+      walk_back: "walk",
+      run: "run",
       Run: "run",
+      jump: "jump",
       Jump: "jump",
+      double_jump: "jump",
+      triple_jump: "jump",
+      fall: "jump", // Use jump animation for falling
+      land: "idle",
+      attack1: "slash1",
       Attack: "slash1",
+      attack2: "slash2",
       Attack2: "slash2",
+      attack3: "attack2",
       Attack3: "attack2",
+      kick: "kick",
+      block: "block",
       Block: "block",
+      block_hit: "block",
       BlockIdle: "blockIdle",
+      strafe_left: "strafeLeft",
       StrafeLeft: "strafeLeft",
+      strafe_right: "strafeRight",
       StrafeRight: "strafeRight",
+      turn_left: "idle", // Turn while idling
+      turn_right: "idle",
+      turn_180: "turn180",
       Turn180: "turn180",
+      roll_forward: "rollForward",
       Roll: "rollForward",
+      roll_left: "rollLeft",
       RollLeft: "rollLeft",
+      roll_right: "rollRight",
       RollRight: "rollRight",
+      roll_back: "rollForward",
+      death: "death",
       Death: "death",
     };
 

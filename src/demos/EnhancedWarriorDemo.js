@@ -532,7 +532,7 @@ class WarriorCombatDemo {
 
     // Update controller
     if (this.controller) {
-      this.controller.update(delta, 0, undefined, this.targetableEnemies);
+      this.controller.update(delta, 0, undefined, this.enemies);
 
       // Apply controller to warrior
       if (this.warrior) {
@@ -558,22 +558,26 @@ class WarriorCombatDemo {
       this.controller.applyToCamera(this.camera);
 
       // Update target lock system
-      const lockedTarget = this.controller.getLockedTarget();
-      this.targetLockSystem.setActiveTarget(lockedTarget);
+      if (this.targetLockSystem) {
+        const lockedTarget = this.controller.getLockedTarget();
+        this.targetLockSystem.setActiveTarget(lockedTarget);
 
-      if (lockedTarget && this.config.debug.logTargetLock) {
-        const health = `${lockedTarget.currentHealth}/${lockedTarget.maxHealth}`;
-        console.log(`🎯 Target locked: Health ${health}`);
+        if (lockedTarget && this.config.debug.logTargetLock) {
+          const health = `${lockedTarget.currentHealth}/${lockedTarget.maxHealth}`;
+          console.log(`🎯 Target locked: Health ${health}`);
+        }
+
+        // Update target health in UI
+        if (this.enemies) {
+          this.enemies.forEach((enemy) => {
+            this.targetLockSystem.setTargetHealth(
+              enemy,
+              enemy.currentHealth || enemy.userData.health,
+              enemy.maxHealth || enemy.userData.maxHealth,
+            );
+          });
+        }
       }
-
-      // Update target health in UI
-      this.targetableEnemies.forEach((enemy) => {
-        this.targetLockSystem.setTargetHealth(
-          enemy,
-          enemy.currentHealth,
-          enemy.maxHealth,
-        );
-      });
     }
 
     // Update animation mixer with proper time scale

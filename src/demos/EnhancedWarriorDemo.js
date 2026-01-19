@@ -600,8 +600,9 @@ class WarriorCombatDemo {
         this.targetLockSystem.setActiveTarget(lockedTarget);
 
         if (lockedTarget && this.config.debug.logTargetLock) {
-          const health = `${lockedTarget.currentHealth}/${lockedTarget.maxHealth}`;
-          console.log(`🎯 Target locked: Health ${health}`);
+          const currentHP = lockedTarget.currentHealth ?? lockedTarget.userData?.health ?? 100;
+          const maxHP = lockedTarget.maxHealth ?? lockedTarget.userData?.maxHealth ?? 100;
+          console.log(`🎯 Target locked: Health ${currentHP}/${maxHP}`);
         }
 
         // Update target health in UI
@@ -662,14 +663,13 @@ class WarriorCombatDemo {
       triple_jump: "jump",
       fall: "jump", // Use jump animation for falling
       land: "idle",
-      attack1: "attack2", // Jump attack
-      Attack: "attack2",
-      attack2: "slash1", // Combo slash 1
-      Attack2: "slash1",
-      attack3: "slash2", // Combo slash 2
-      Attack3: "slash2",
-      attack4: "attack2", // Finisher
-      Attack4: "attack2",
+      attack1: "slash1", // LMB Combo: Slash 1
+      Attack: "slash1",
+      attack2: "slash2", // LMB Combo: Slash 2
+      Attack2: "slash2",
+      attack3: "attack2", // LMB Combo: Finisher
+      Attack3: "attack2",
+      jump_attack: "attack2", // Special: Jump AOE (second half of attack2 anim)
       kick: "kick",
       block: "block",
       Block: "block",

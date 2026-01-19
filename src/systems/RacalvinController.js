@@ -825,10 +825,15 @@ export class RacalvinController {
       }
     }
 
-    // During attack, decelerate to stop smoothly
+    // During attack, decelerate to stop quickly
     if (char.attackTimer > 0 && char.isGrounded) {
-      // Slow down during attack
-      char.forwardVel = Math.max(0, char.forwardVel - deceleration * 0.5 * delta);
+      // Aggressive deceleration during attack to stop sliding
+      char.forwardVel = Math.max(0, char.forwardVel - deceleration * 2.0 * delta);
+      
+      // Snap to zero when very slow
+      if (char.forwardVel < 0.5) {
+        char.forwardVel = 0;
+      }
     }
 
     // Movement

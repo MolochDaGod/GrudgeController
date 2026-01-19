@@ -99,8 +99,11 @@ export const GAME_CONFIG = {
   animations: {
     idle: "sword and shield idle.fbx",
     walk: "sword and shield walk.fbx",
+    walkBack: "sword and shield walk (2).fbx",
     run: "sword and shield run.fbx",
     jump: "sword and shield jump.fbx",
+    turnLeft: "sword and shield turn.fbx",
+    turnRight: "sword and shield turn (2).fbx",
 
     // Combat
     slash1: "sword and shield slash.fbx",

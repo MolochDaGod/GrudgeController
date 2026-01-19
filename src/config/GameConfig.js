@@ -13,9 +13,9 @@ export const GAME_CONFIG = {
   // File paths (customize for your project)
   paths: {
     characterModel:
-      "./../../public/models/RacalvinDaWarrior/Meshy_AI_Orc_Warlord_Render_1220104017_texture_fbx.fbx",
+      "/models/RacalvinDaWarrior/Meshy_AI_Orc_Warlord_Render_1220104017_texture_fbx.fbx",
     weapon: "../My project/Assets/Editor/ThreeExporter/racsknife.glb",
-    animations: "./../../public/models/RacalvinDaWarrior/", // Base path for animations
+    animations: "/models/RacalvinDaWarrior/", // Base path for animations
     textures: "./textures/", // Optional textures folder
   },
 

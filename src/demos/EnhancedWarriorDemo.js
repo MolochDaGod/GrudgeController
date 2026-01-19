@@ -662,12 +662,14 @@ class WarriorCombatDemo {
       triple_jump: "jump",
       fall: "jump", // Use jump animation for falling
       land: "idle",
-      attack1: "slash1",
-      Attack: "slash1",
-      attack2: "slash2",
-      Attack2: "slash2",
-      attack3: "attack2",
-      Attack3: "attack2",
+      attack1: "attack2", // Jump attack
+      Attack: "attack2",
+      attack2: "slash1", // Combo slash 1
+      Attack2: "slash1",
+      attack3: "slash2", // Combo slash 2
+      Attack3: "slash2",
+      attack4: "attack2", // Finisher
+      Attack4: "attack2",
       kick: "kick",
       block: "block",
       Block: "block",

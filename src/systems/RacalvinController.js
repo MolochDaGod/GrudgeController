@@ -757,20 +757,37 @@ export class RacalvinController {
       }
     }
 
-    // Attack
+    // Attack - Must wait for animation to complete
     if (this.input.attack && !this.prevInput.attack && char.attackTimer <= 0) {
       if (char.isGrounded && char.rollTimer <= 0) {
-        char.attackTimer = attackDuration;
-        char.attackCombo =
-          char.attackCooldown > 0 && char.attackCombo < 3
-            ? char.attackCombo + 1
-            : 1;
-        char.attackCooldown =
-          char.attackCombo === 3 ? comboCooldown : attackCooldown;
+        // Set attack timer based on combo step
+        const attackDurations = {
+          1: 0.6, // Jump attack (attack1)
+          2: 0.5, // Slash 1 (slash1) 
+          3: 0.5, // Slash 2 (slash2)
+          4: 0.7, // Finisher (attack2)
+        };
+        
+        // Advance combo if within combo window
+        if (char.attackCooldown > 0 && char.attackCombo < 4) {
+          char.attackCombo += 1;
+        } else {
+          char.attackCombo = 1; // Start new combo
+        }
+        
+        // Set timer for this attack's duration
+        char.attackTimer = attackDurations[char.attackCombo] || attackDuration;
+        
+        // Reset combo after finisher, otherwise keep combo open
+        if (char.attackCombo === 4) {
+          char.attackCooldown = comboCooldown; // Longer cooldown after full combo
+        } else {
+          char.attackCooldown = attackCooldown; // Short window to continue combo
+        }
         
         // Lunge forward in facing direction based on combo
-        const lungeForce = 3 + (char.attackCombo * 1.5);
-        char.forwardVel = lungeForce;
+        const lungeForceMod = [0, 3, 3.5, 4, 5.5]; // Index 0 unused, 1-4 are combo steps
+        char.forwardVel = lungeForceMod[char.attackCombo];
       }
     }
 

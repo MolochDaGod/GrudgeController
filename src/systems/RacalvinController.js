@@ -776,15 +776,14 @@ export class RacalvinController {
       }
     }
 
-    // Attack - Must wait for animation to complete
+    // Attack - Must wait for animation to complete (1.5s minimum)
     if (this.input.attack && !this.prevInput.attack && char.attackTimer <= 0) {
       if (char.isGrounded && char.rollTimer <= 0) {
-        // Set attack timer based on combo step
-        const attackDurations = {
-          1: 0.5, // Slash 1 (slash1)
-          2: 0.5, // Slash 2 (slash2)
-          3: 0.7, // Finisher (attack2)
-        };
+        // Minimum 1.5 second duration per attack for full animation
+        const ANIMATION_DURATION = 1.5;
+        
+        // Set attack timer - blocks ALL input during animation
+        char.attackTimer = ANIMATION_DURATION;
         
         // Advance combo if within combo window
         if (char.attackCooldown > 0 && char.attackCombo < 3) {
@@ -792,9 +791,6 @@ export class RacalvinController {
         } else {
           char.attackCombo = 1; // Start new combo
         }
-        
-        // Set timer for this attack's duration
-        char.attackTimer = attackDurations[char.attackCombo] || attackDuration;
         
         // Reset combo after finisher, otherwise keep combo open
         if (char.attackCombo === 3) {

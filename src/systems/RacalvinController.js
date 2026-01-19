@@ -767,7 +767,10 @@ export class RacalvinController {
             : 1;
         char.attackCooldown =
           char.attackCombo === 3 ? comboCooldown : attackCooldown;
-        char.forwardVel += 2 * char.attackCombo;
+        
+        // Lunge forward in facing direction based on combo
+        const lungeForce = 3 + (char.attackCombo * 1.5);
+        char.forwardVel = lungeForce;
       }
     }
 
@@ -820,6 +823,12 @@ export class RacalvinController {
         char.turn180Timer = 0;
         char.isTurning = false;
       }
+    }
+
+    // During attack, decelerate to stop smoothly
+    if (char.attackTimer > 0 && char.isGrounded) {
+      // Slow down during attack
+      char.forwardVel = Math.max(0, char.forwardVel - deceleration * 0.5 * delta);
     }
 
     // Movement

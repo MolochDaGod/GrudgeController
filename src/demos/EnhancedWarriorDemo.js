@@ -431,8 +431,8 @@ class WarriorCombatDemo {
       <br>
       <strong>Combat:</strong><br>
       Left Click - Attack<br>
-      Right Click - Block<br>
-      Z - Lock Target<br>
+      Right Click (Hold) - Block<br>
+      Tab - Lock Target<br>
       X - Cycle Targets<br>
       <br>
       <strong>Dodge Rolls:</strong><br>
@@ -521,9 +521,18 @@ class WarriorCombatDemo {
       anim.crossFadeFrom(this.currentAnimation, crossfadeDuration, true);
     }
 
-    // Configure animation playback
-    anim.setLoop(THREE.LoopRepeat);
-    anim.clampWhenFinished = true;
+    // Configure animation playback based on type
+    // Block animations should play once and hold, others loop
+    if (name === "block" || name === "blockIdle") {
+      anim.setLoop(THREE.LoopOnce);
+      anim.clampWhenFinished = true; // Hold at last frame
+    } else if (["slash1", "slash2", "attack2", "kick"].includes(name)) {
+      anim.setLoop(THREE.LoopOnce);
+      anim.clampWhenFinished = true; // Hold at end of attack
+    } else {
+      anim.setLoop(THREE.LoopRepeat); // Loop locomotion
+      anim.clampWhenFinished = false;
+    }
     anim.play();
     this.currentAnimation = anim;
 

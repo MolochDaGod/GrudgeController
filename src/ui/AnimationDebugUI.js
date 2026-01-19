@@ -56,7 +56,7 @@ export class AnimationDebugUI {
       </div>
       <div id="anim-ui-content">
         <div style="margin-bottom: 10px; padding: 8px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; border: 1px solid #ff6b6b;">
-          <div style="color: #ff6b6b; font-size: 11px; margin-bottom: 5px;">⚡ Hotkey: Press <strong>`</strong> (Backtick) to toggle</div>
+          <div style="color: #ff6b6b; font-size: 11px; margin-bottom: 5px;">⚡ Hotkey: Press <strong>\`</strong> (Backtick) to toggle</div>
           <div style="color: #aaa; font-size: 10px;">Current: <span id="current-anim" style="color: #0f0;">${this.currentAnimation}</span></div>
         </div>
         <div style="margin-bottom: 8px; font-size: 11px; color: #888;">

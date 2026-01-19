@@ -135,6 +135,13 @@ export const GAME_CONFIG = {
     // Transitions
     land: "sword and shield impact.fbx",     // Landing from jump
     fallToRoll: "sword and shield crouch.fbx", // Blend from fall to roll
+    
+    // Hit reactions (physics-based collision responses)
+    hitLight: "sword and shield impact.fbx",      // Light impact (<2 m/s)
+    hitMedium: "impact (2).fbx",                  // Medium impact (2-5 m/s)
+    hitHeavy: "impact (3).fbx",                   // Heavy impact (5-8 m/s)
+    // Ragdoll at >8 m/s uses physics bones
+    
     impact: "sword and shield impact.fbx",
     death: "sword and shield death.fbx",
   },

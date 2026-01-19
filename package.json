@@ -39,6 +39,7 @@
   "author": "Racalvin Combat Team",
   "license": "MIT",
   "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.19.3",
     "cannon-es": "^0.20.0",
     "howler": "^2.2.4",
     "stats.js": "^0.17.0",

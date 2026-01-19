@@ -10,6 +10,7 @@ import { ParticleSystem } from './ParticleSystem.js';
 import { HitZoneSystem } from './HitZoneSystem.js';
 import { RangedWeaponSystem } from './RangedWeaponSystem.js';
 import { AnimationMapper } from './AnimationMapper.js';
+import { PhysicsSystem } from './PhysicsSystem.js';
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
@@ -79,6 +80,12 @@ export const DEFAULT_CONFIG = {
   // Hit reactions
   hitReactDuration: 0.6,    // was 0.4 - LONGER stagger
   hitKnockbackStrength: 3,  // NEW - push back more
+  
+  // Physics - Speed-based collision responses
+  enablePhysics: true,      // NEW - Enable Rapier physics engine
+  lightImpactSpeed: 2.0,    // m/s - Threshold for light hit
+  mediumImpactSpeed: 5.0,   // m/s - Threshold for medium hit
+  heavyImpactSpeed: 8.0,    // m/s - Threshold for heavy hit/ragdoll
 
   // Target lock settings
   targetLockRange: 15,
@@ -228,9 +235,14 @@ export class RacalvinController {
     this.hitZoneSystem = null;
     this.rangedWeaponSystem = null;
     this.animationMapper = null;
+    this.physicsSystem = null;  // NEW - Rapier.js physics engine
     
     // Enemies list for combat
     this.enemies = [];
+    
+    // Physics state
+    this.physicsInitialized = false;
+    this.characterMesh = null;
   }
 
   createEmptyInput() {
@@ -279,13 +291,15 @@ export class RacalvinController {
   }
   
   /**
-   * Initialize production systems (audio, particles, hit zones, ranged weapons)
+   * Initialize production systems (audio, particles, hit zones, ranged weapons, physics)
    * Call this after creating the controller
    * @param {THREE.Scene} scene - Three.js scene
    * @param {THREE.Camera} camera - Three.js camera
    * @param {Object} characterMesh - Character mesh/group for hit zones
    */
-  initializeSystems(scene, camera, characterMesh) {
+  async initializeSystems(scene, camera, characterMesh) {
+    this.characterMesh = characterMesh;
+    
     // Audio system with 3D spatial audio
     this.audioSystem = new AudioSystem(camera);
     console.log('✓ AudioSystem initialized');
@@ -307,6 +321,34 @@ export class RacalvinController {
     // Animation mapper for 50+ animations
     this.animationMapper = new AnimationMapper();
     console.log('✓ AnimationMapper initialized');
+    
+    // Physics system with Rapier.js
+    if (this.config.enablePhysics) {
+      this.physicsSystem = new PhysicsSystem({
+        lightImpactSpeed: this.config.lightImpactSpeed,
+        mediumImpactSpeed: this.config.mediumImpactSpeed,
+        heavyImpactSpeed: this.config.heavyImpactSpeed,
+        ragdollThreshold: this.config.heavyImpactSpeed,
+      });
+      
+      await this.physicsSystem.init();
+      
+      // Add character to physics
+      if (characterMesh) {
+        this.physicsSystem.addCharacter(characterMesh, {
+          mass: 70,
+          radius: this.config.characterRadius,
+          height: 1.8,
+          isKinematic: true // Player controlled
+        });
+        
+        // Setup collision callback
+        characterMesh.userData.onCollision = (event) => this.handlePhysicsCollision(event);
+      }
+      
+      console.log('✓ PhysicsSystem initialized with Rapier.js');
+      this.physicsInitialized = true;
+    }
     
     console.log('🎮 All production systems initialized!');
   }
@@ -484,12 +526,77 @@ export class RacalvinController {
     this.updateCameraPosition(delta);
     this.updateState();
     
+    // Update physics system
+    if (this.physicsInitialized && this.physicsSystem) {
+      this.physicsSystem.update(delta);
+    }
+    
     // Update animation state based on controller state
     this.updateAnimationState();
     
     // Update animation mixer if animation controller is set
     if (this.animationController) {
       this.animationController.update(delta);
+    }
+  }
+
+  /**
+   * Handle physics-based collision events
+   * Called automatically by PhysicsSystem when collision occurs
+   * @param {Object} event - Collision event from PhysicsSystem
+   */
+  handlePhysicsCollision(event) {
+    const { impactSpeed, impactType, direction } = event;
+    const char = this.character;
+    
+    // Ignore collisions during roll (i-frames) or if already in hit state
+    if (char.isInvulnerable || char.hitReactTimer > 0) return;
+    
+    console.log(`⚡ Collision: ${impactType} impact at ${impactSpeed.toFixed(2)} m/s`);
+    
+    // Determine hit animation and response based on impact type
+    switch (impactType) {
+      case 'light':
+        // Light bump - no animation, just slight pushback
+        char.forwardVel *= 0.7;
+        break;
+        
+      case 'medium':
+        // Medium impact - play light hit animation
+        this.applyHit('front', 0); // Uses existing hit system
+        char.hitReactTimer = 0.3; // Shorter stagger
+        
+        // Apply knockback
+        if (this.physicsSystem) {
+          this.physicsSystem.applyKnockback(this.characterMesh, direction, 'medium');
+        }
+        break;
+        
+      case 'heavy':
+        // Heavy impact - play medium hit animation
+        this.applyHit('front', 0);
+        char.hitReactTimer = this.config.hitReactDuration; // Full stagger
+        
+        // Apply strong knockback
+        if (this.physicsSystem) {
+          this.physicsSystem.applyKnockback(this.characterMesh, direction, 'heavy');
+        }
+        break;
+        
+      case 'ragdoll':
+        // Extreme impact - activate ragdoll physics
+        if (this.physicsSystem && this.characterMesh) {
+          console.log('💥 Ragdoll activated!');
+          this.physicsSystem.activateRagdoll(
+            this.characterMesh,
+            direction.multiplyScalar(impactSpeed * 0.5)
+          );
+          
+          // Lock controls during ragdoll
+          char.hitReactTimer = this.physicsSystem.config.ragdollDuration;
+          char.isInvulnerable = true;
+        }
+        break;
     }
   }
 

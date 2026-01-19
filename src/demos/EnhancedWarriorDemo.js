@@ -81,9 +81,20 @@ export class EnhancedWarriorDemo {
     this.createEnemies();
     this.setupEnvironment();
     this.setupTargetLock();
-    this.setupController();
+    await this.setupController();
     this.setupControls();
     this.setupUI();
+    
+    // Add obstacles to physics after controller is initialized
+    if (this.controller.physicsSystem && this.obstacles) {
+      this.obstacles.forEach(obstacle => {
+        this.controller.physicsSystem.addStaticCollider(obstacle, {
+          friction: 0.8,
+          restitution: 0.1
+        });
+      });
+      console.log('✓ Obstacles added to physics system');
+    }
 
     this.animate();
     
@@ -380,6 +391,46 @@ export class EnhancedWarriorDemo {
       0x222222,
     );
     this.scene.add(gridHelper);
+    
+    // Add test obstacles for collision physics
+    this.createTestObstacles();
+  }
+  
+  createTestObstacles() {
+    console.log('🚧 Creating test obstacles for physics...');
+    
+    // Create some walls/pillars to test collision
+    const obstacles = [
+      // Pillar 1
+      { pos: [5, 1, 0], size: [1, 2, 1], color: 0x555555 },
+      // Pillar 2
+      { pos: [-5, 1, 0], size: [1, 2, 1], color: 0x555555 },
+      // Wall
+      { pos: [0, 1, -8], size: [8, 2, 0.5], color: 0x666666 },
+      // Box obstacle
+      { pos: [3, 0.5, 5], size: [1, 1, 1], color: 0x8B4513 },
+    ];
+    
+    this.obstacles = [];
+    
+    obstacles.forEach(({ pos, size, color }) => {
+      const geometry = new THREE.BoxGeometry(...size);
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.7,
+        metalness: 0.3
+      });
+      
+      const obstacle = new THREE.Mesh(geometry, material);
+      obstacle.position.set(...pos);
+      obstacle.castShadow = true;
+      obstacle.receiveShadow = true;
+      
+      this.scene.add(obstacle);
+      this.obstacles.push(obstacle);
+    });
+    
+    console.log(`✓ Created ${this.obstacles.length} test obstacles`);
   }
 
 
@@ -395,7 +446,7 @@ export class EnhancedWarriorDemo {
     console.log("🎯 Target lock system initialized");
   }
   
-  setupController() {
+  async setupController() {
     // Create controller with config
     this.controller = new RacalvinController({
       ...this.config.character,
@@ -409,8 +460,8 @@ export class EnhancedWarriorDemo {
     // Setup input listeners
     this.controller.setupInputListeners(this.renderer.domElement);
     
-    // Initialize all integrated production systems
-    this.controller.initializeSystems(this.scene, this.camera, this.warrior);
+    // Initialize all integrated production systems (async for physics)
+    await this.controller.initializeSystems(this.scene, this.camera, this.warrior);
     
     // Register enemies for combat
     this.enemies.forEach(enemy => {
@@ -422,6 +473,16 @@ export class EnhancedWarriorDemo {
         isDead: enemy.userData.isDead
       });
     });
+    
+    // Add enemies to physics system
+    if (this.controller.physicsSystem) {
+      this.enemies.forEach(enemy => {
+        this.controller.physicsSystem.addStaticCollider(enemy, {
+          friction: 0.7,
+          restitution: 0.2
+        });
+      });
+    }
 
     console.log("🎮 Controller initialized with all production systems");
   }

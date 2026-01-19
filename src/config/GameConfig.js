@@ -21,10 +21,10 @@ export const GAME_CONFIG = {
 
   // Character controller settings
   character: {
-    maxSpeed: 8,
-    walkSpeed: 3.2,
-    acceleration: 25,
-    deceleration: 15,
+    maxSpeed: 3.5,      // Reduced - matches animation better
+    walkSpeed: 1.6,     // Slower walk for sync
+    acceleration: 12,   // Smoother acceleration
+    deceleration: 20,   // Controlled stopping
 
     jumpVelocity: 10,
     doubleJumpMultiplier: 1.3,
@@ -97,11 +97,18 @@ export const GAME_CONFIG = {
 
   // Animation mappings (customize for your FBX files)
   animations: {
+    // Idle variations (randomly cycle for natural feel)
     idle: "sword and shield idle.fbx",
+    idle2: "sword and shield idle (2).fbx",
+    idle3: "sword and shield idle (3).fbx",
+    idle4: "sword and shield idle (4).fbx",
+    
+    // Locomotion
     walk: "sword and shield walk.fbx",
     walkBack: "sword and shield walk (2).fbx",
     run: "sword and shield run.fbx",
     jump: "sword and shield jump.fbx",
+    fall: "sword and shield jump (2).fbx", // Falling pose
     turnLeft: "sword and shield turn.fbx",
     turnRight: "sword and shield turn (2).fbx",
 
@@ -118,11 +125,16 @@ export const GAME_CONFIG = {
     strafeLeft: "sword and shield strafe.fbx",
     strafeRight: "sword and shield strafe (2).fbx",
 
-    // Movement
+    // Evasion - Using crouching animations as rolls
     turn180: "sword and shield 180 turn.fbx",
-    rollLeft: "sword and shield strafe.fbx",
-    rollRight: "sword and shield strafe (2).fbx",
-    rollForward: "sword and shield strafe (3).fbx", // Can use different strafe as forward roll
+    rollLeft: "sword and shield crouching.fbx",      // Left dodge roll
+    rollRight: "sword and shield crouching (2).fbx",  // Right dodge roll
+    rollForward: "sword and shield crouching (3).fbx", // Forward roll
+    rollBack: "sword and shield crouch.fbx",           // Back roll
+    
+    // Transitions
+    land: "sword and shield impact.fbx",     // Landing from jump
+    fallToRoll: "sword and shield crouch.fbx", // Blend from fall to roll
     impact: "sword and shield impact.fbx",
     death: "sword and shield death.fbx",
   },

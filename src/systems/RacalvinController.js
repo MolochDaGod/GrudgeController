@@ -16,10 +16,10 @@ const RAD2DEG = 180 / Math.PI;
 
 export const DEFAULT_CONFIG = {
   // Movement - Realistic physics synced to animation
-  maxSpeed: 4.5,            // Run speed (realistic human ~5 m/s)
-  walkSpeed: 2.0,           // Walk speed (realistic human ~1.5-2 m/s)
-  acceleration: 15,         // Faster response - less slide on start
-  deceleration: 25,         // MUCH faster stop - no ice skating
+  maxSpeed: 3.5,            // Run speed - reduced to match animation
+  walkSpeed: 1.6,           // Walk speed - slower for better sync
+  acceleration: 12,         // Slower acceleration for smooth start
+  deceleration: 20,         // Fast stop but not instant
 
   // Turn speed - Responsive but grounded
   turnSpeedFast: Math.PI * 1.2,     // Faster turning - more responsive
@@ -32,9 +32,13 @@ export const DEFAULT_CONFIG = {
   tiltMax: DEG2RAD * 12,
 
   gravity: 25,
-  jumpVelocity: 10,
+  jumpVelocity: 8,              // Reduced from 10 - more grounded
   doubleJumpMultiplier: 1.3,
   tripleJumpMultiplier: 1.7,
+  jumpForwardBoost: 0.5,        // Forward momentum on jump
+  airControl: 0.3,              // Air control multiplier (0-1)
+  coyoteTime: 0.15,             // Grace period after leaving ground (150ms)
+  jumpBufferTime: 0.1,          // Input buffer window (100ms)
 
   swimSpeed: 5,
   swimAccel: 8,
@@ -111,11 +115,16 @@ export class RacalvinController {
       isGrounded: true,
       isJumping: false,
       isFalling: false,
+      isLanding: false,
+      landingTimer: 0,
       isInvulnerable: false,
 
       jumpCount: 0,
       jumpComboTimer: 0,
       lastLandTime: 0,
+      jumpStartVelocity: 0,
+      coyoteTimer: 0,              // Time since left ground
+      jumpBufferTimer: 0,          // Time jump was pressed while airborne
 
       attackCombo: 0,
       attackTimer: 0,
@@ -156,6 +165,13 @@ export class RacalvinController {
       state: "idle",
       prevState: "idle",
       stateTime: 0,
+      idleVariation: 1,           // Which idle animation (1-4)
+      idleVariationTimer: 0,      // Time until next idle change
+      
+      // Fall-to-roll system
+      canRollOnLanding: false,    // True if falling from height
+      fallDistance: 0,            // Track fall height
+      fallStartY: 0,              // Y position when fall started
 
       // Target lock
       lockedTarget: null,
@@ -390,6 +406,8 @@ export class RacalvinController {
     const shift = this.keys.has("shiftleft") || this.keys.has("shiftright");
     const aKey = this.keys.has("keya") || this.keys.has("arrowleft");
     const dKey = this.keys.has("keyd") || this.keys.has("arrowright");
+    const qKey = this.keys.has("keyq");
+    const eKey = this.keys.has("keye");
 
     let moveY = 0;
     if (this.keys.has("keyw") || this.keys.has("arrowup")) moveY = 1;
@@ -397,10 +415,11 @@ export class RacalvinController {
 
     const isBlocking = this.mouseButtons.has(2);
 
-    this.input.moveX = isBlocking ? (aKey ? -1 : dKey ? 1 : 0) : 0;
+    // Q/E for strafing, A/D for turning
+    this.input.moveX = qKey ? -1 : eKey ? 1 : 0;
     this.input.moveY = moveY;
-    this.input.turnLeft = aKey && !isBlocking;
-    this.input.turnRight = dKey && !isBlocking;
+    this.input.turnLeft = aKey;
+    this.input.turnRight = dKey;
     this.input.shift = shift;
     this.input.jump = this.keys.has("space");
     this.input.attack = this.mouseButtons.has(0);
@@ -408,7 +427,7 @@ export class RacalvinController {
     this.input.roll = shift && moveY !== 0;
     this.input.rollLeft = false; // Will be set by double-tap detection
     this.input.rollRight = false; // Will be set by double-tap detection
-    this.input.interact = this.keys.has("keye") || this.keys.has("keyf");
+    this.input.interact = this.keys.has("keyf");
     this.input.targetLock = this.keys.has("tab"); // Tab for lock-on
     this.input.targetCycle = this.keys.has("keyx"); // X for cycle targets
 
@@ -737,12 +756,59 @@ export class RacalvinController {
 
     const wasGrounded = char.isGrounded;
     char.isGrounded = char.position.y <= groundHeight + 0.05;
+    
+    // Coyote time - allow jump shortly after leaving ground
+    if (wasGrounded && !char.isGrounded) {
+      char.coyoteTimer = this.config.coyoteTime;
+    }
+    if (char.coyoteTimer > 0) {
+      char.coyoteTimer -= delta;
+    }
 
     if (char.isGrounded && !wasGrounded) {
       char.velocity.y = 0;
       char.position.y = groundHeight;
       char.isJumping = false;
       char.isFalling = false;
+      
+      // Calculate fall distance
+      char.fallDistance = char.fallStartY - char.position.y;
+      
+      // Check if player pressed roll during fall (fall-to-roll)
+      if (char.canRollOnLanding && this.input.roll && char.fallDistance > 2) {
+        // Execute roll on landing instead of normal landing
+        char.rollTimer = rollDuration;
+        char.rollCooldown = rollCooldown;
+        char.isInvulnerable = true;
+        char.isLanding = false;
+        
+        // Roll in movement direction or forward
+        if (char.intendedMag > 0.1) {
+          char.rollDirection.set(
+            Math.sin(char.intendedYaw),
+            0,
+            Math.cos(char.intendedYaw),
+          );
+        } else {
+          char.rollDirection.set(
+            Math.sin(char.faceAngle),
+            0,
+            Math.cos(char.faceAngle),
+          );
+        }
+      } else {
+        // Normal landing
+        if (Math.abs(char.velocity.y) > 5) {
+          char.isLanding = true;
+          char.landingTimer = 0.4; // Heavy landing duration
+        } else {
+          char.isLanding = true;
+          char.landingTimer = 0.2; // Light landing duration
+        }
+      }
+      
+      char.canRollOnLanding = false;
+      char.fallDistance = 0;
       char.lastLandTime = now;
     }
 
@@ -753,10 +819,32 @@ export class RacalvinController {
     if (char.attackCooldown > 0) char.attackCooldown -= delta;
     if (char.attackTimer > 0) char.attackTimer -= delta;
     if (char.rollCooldown > 0) char.rollCooldown -= delta;
+    if (char.landingTimer > 0) {
+      char.landingTimer -= delta;
+      if (char.landingTimer <= 0) {
+        char.isLanding = false;
+      }
+    }
+    
+    // Jump buffer - remember jump input
+    if (char.jumpBufferTimer > 0) {
+      char.jumpBufferTimer -= delta;
+    }
 
-    // Jump
-    if (this.input.jump && !this.prevInput.jump && char.attackTimer <= 0) {
-      if (char.isGrounded) {
+    // Jump buffer - store jump input when airborne
+    if (this.input.jump && !this.prevInput.jump) {
+      char.jumpBufferTimer = this.config.jumpBufferTime;
+    }
+    
+    // Jump - Improved with forward momentum, air control, coyote time, and buffer
+    const canJump = (char.isGrounded || char.coyoteTimer > 0) && char.attackTimer <= 0 && !char.isLanding;
+    const wantsToJump = (this.input.jump && !this.prevInput.jump) || char.jumpBufferTimer > 0;
+    
+    if (wantsToJump && canJump) {
+      char.jumpBufferTimer = 0; // Consume buffer
+      char.coyoteTimer = 0; // Consume coyote time
+      
+      if (char.isGrounded || char.coyoteTimer > 0) {
         const timeSinceLand = now - char.lastLandTime;
         const canCombo =
           timeSinceLand < JUMP_COMBO_WINDOW && char.jumpCount > 0;
@@ -771,8 +859,17 @@ export class RacalvinController {
           char.velocity.y = jumpVelocity;
           char.jumpCount = 1;
         }
+        
+        // Preserve forward momentum and add jump boost
+        char.jumpStartVelocity = char.forwardVel;
+        if (char.intendedMag > 0.1) {
+          char.forwardVel += this.config.jumpForwardBoost;
+        }
+        
         char.isJumping = true;
         char.isGrounded = false;
+        char.isLanding = false;
+        char.landingTimer = 0;
       }
     }
 
@@ -867,12 +964,13 @@ export class RacalvinController {
       }
     }
 
-    // Movement
+    // Movement - Restrict during landing recovery
     if (
       char.isGrounded &&
       char.attackTimer <= 0 &&
       !char.isBlocking &&
-      char.turn180Timer <= 0
+      char.turn180Timer <= 0 &&
+      !char.isLanding
     ) {
       char.isTurning = this.input.turnLeft || this.input.turnRight;
 
@@ -926,14 +1024,46 @@ export class RacalvinController {
           char.forwardVel = 0;
         }
       }
-    } else if (char.isBlocking && char.isGrounded) {
-      // When blocking or locked on, allow circle strafing
-      if (char.intendedMag > 0.1) {
+    } else if (char.isLanding && char.isGrounded) {
+      // During landing, apply strong deceleration
+      if (char.forwardVel > 0) {
+        char.forwardVel = Math.max(0, char.forwardVel - deceleration * 1.5 * delta);
+      } else if (char.forwardVel < 0) {
+        char.forwardVel = Math.min(0, char.forwardVel + deceleration * 1.5 * delta);
+      }
+    } else if ((char.isBlocking || this.input.moveX !== 0) && char.isGrounded) {
+      // When blocking, locked on, or using Q/E - allow strafing
+      if (char.intendedMag > 0.1 || this.input.moveX !== 0) {
         let angleDiff = char.intendedYaw - char.faceAngle;
         while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
         while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
-        char.sideVel = Math.sin(angleDiff) * walkSpeed * 0.7;
+        // Calculate strafe velocity (Q/E keys or movement relative to facing)
+        if (this.input.moveX !== 0) {
+          char.sideVel = this.input.moveX * walkSpeed * 0.7;
+        } else {
+          char.sideVel = Math.sin(angleDiff) * walkSpeed * 0.7;
+        }
+        
+        // Forward/back movement during strafe
+        if (this.input.moveY > 0.1) {
+          char.forwardVel += acceleration * delta * 0.8;
+          if (char.forwardVel > walkSpeed * 0.6) {
+            char.forwardVel = walkSpeed * 0.6;
+          }
+        } else if (this.input.moveY < -0.1) {
+          char.forwardVel -= acceleration * delta * 0.8;
+          if (char.forwardVel < -walkSpeed * 0.6) {
+            char.forwardVel = -walkSpeed * 0.6;
+          }
+        } else {
+          // Decelerate forward velocity when only strafing
+          if (char.forwardVel > 0) {
+            char.forwardVel = Math.max(0, char.forwardVel - deceleration * delta);
+          } else if (char.forwardVel < 0) {
+            char.forwardVel = Math.min(0, char.forwardVel + deceleration * delta);
+          }
+        }
 
         // Face locked target while strafing
         if (char.lockedTarget && char.lockedTarget.position) {
@@ -947,14 +1077,28 @@ export class RacalvinController {
         char.sideVel = 0;
       }
     } else if (!char.isGrounded) {
-      if (char.intendedMag > 0.1) {
-        const intendedDYaw = char.intendedYaw - char.faceAngle;
-        char.forwardVel +=
-          0.5 * Math.cos(intendedDYaw) * char.intendedMag * delta;
-        char.faceAngle +=
-          0.3 * Math.sin(intendedDYaw) * char.intendedMag * delta;
+      // Track fall for fall-to-roll mechanic
+      if (!char.isJumping && char.velocity.y < -2) {
+        if (char.fallStartY === 0) {
+          char.fallStartY = char.position.y;
+        }
+        char.canRollOnLanding = true; // Enable fall-to-roll
       }
-      char.forwardVel *= Math.pow(0.99, delta * 60);
+      
+      // Air control - subtle directional influence
+      if (char.intendedMag > 0.1) {
+        const airControl = this.config.airControl;
+        const intendedDYaw = char.intendedYaw - char.faceAngle;
+        
+        // Reduced air control for more realistic physics
+        char.forwardVel +=
+          airControl * Math.cos(intendedDYaw) * char.intendedMag * delta;
+        char.faceAngle +=
+          airControl * 0.6 * Math.sin(intendedDYaw) * char.intendedMag * delta;
+      }
+      
+      // Air friction - maintain momentum better
+      char.forwardVel *= Math.pow(0.985, delta * 60);
     }
 
     // Apply velocity with additional friction multiplier
@@ -1349,20 +1493,35 @@ export class RacalvinController {
       } else {
         char.state = "block";
       }
+    } else if (this.input.moveX !== 0 && char.isGrounded && !char.isLanding) {
+      // Q/E strafing without blocking
+      if (this.input.moveX < 0) {
+        char.state = "strafe_left";
+      } else {
+        char.state = "strafe_right";
+      }
     } else if (char.turn180Timer > 0) {
       char.state = "turn_180";
     } else if (char.isSliding) {
       char.state = "slide";
+    } else if (char.isLanding && char.isGrounded) {
+      // Landing state - character recovering from fall
+      char.state = "land";
     } else if (!char.isGrounded) {
       if (char.isJumping) {
-        if (char.jumpCount === 3) char.state = "triple_jump";
-        else if (char.jumpCount === 2) char.state = "double_jump";
-        else char.state = "jump";
+        // Rising phase of jump
+        if (char.velocity.y > 0) {
+          if (char.jumpCount === 3) char.state = "triple_jump";
+          else if (char.jumpCount === 2) char.state = "double_jump";
+          else char.state = "jump";
+        } else {
+          // Peak/falling phase of jump
+          char.state = "fall";
+        }
       } else if (char.isFalling) {
         char.state = "fall";
       }
-    } else {
-      if (char.forwardVel > this.config.walkSpeed + 0.5) {
+    } else if (char.forwardVel > this.config.walkSpeed + 0.5) {
         char.state = "run";
       } else if (char.forwardVel > 0.5) {
         char.state = "walk";
@@ -1373,7 +1532,27 @@ export class RacalvinController {
       } else if (char.isTurning && this.input.turnRight) {
         char.state = "turn_right";
       } else {
-        char.state = "idle";
+        // Idle with variations
+        if (char.state !== "idle" || char.stateTime === 0) {
+          // Just entered idle, pick a random variation
+          char.idleVariation = Math.floor(Math.random() * 4) + 1; // 1-4
+          char.idleVariationTimer = 3 + Math.random() * 4; // 3-7 seconds
+        } else if (char.idleVariationTimer > 0) {
+          char.idleVariationTimer -= delta;
+          if (char.idleVariationTimer <= 0) {
+            // Time to change idle variation
+            char.idleVariation = Math.floor(Math.random() * 4) + 1;
+            char.idleVariationTimer = 3 + Math.random() * 4;
+          }
+        }
+        
+        // Set idle state with variation number
+        if (char.idleVariation === 1) {
+          char.state = "idle";
+        } else {
+          char.state = `idle${char.idleVariation}`;
+        }
+      }
       }
     }
 

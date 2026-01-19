@@ -13,10 +13,14 @@ import {
   DEFAULT_CONFIG,
 } from "../systems/RacalvinController.js";
 import { GAME_CONFIG, validateConfig } from "../config/GameConfig.js";
-import { ModularCharacterSystem } from "../systems/ModularCharacterSystem.js";
-import { EnemySpawnSystem } from "../systems/EnemySpawnSystem.js";
 import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
+import { TargetLockSystem } from "../systems/TargetLockSystem.js";
 
+export class EnhancedWarriorDemo {
+  constructor(config = {}) {
+    // Merge configs
+    this.config = { ...DEFAULT_CONFIG, ...GAME_CONFIG, ...config };
+    
     // Validate configuration
     const validation = validateConfig(this.config);
     if (!validation.valid) {
@@ -38,6 +42,9 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
 
     // Controller with integrated systems
     this.controller = null;
+    
+    // Target lock system
+    this.targetLockSystem = null;
 
     // Enemies
     this.enemies = [];
@@ -73,6 +80,7 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
     
     this.createEnemies();
     this.setupEnvironment();
+    this.setupTargetLock();
     this.setupController();
     this.setupControls();
     this.setupUI();
@@ -375,6 +383,18 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
   }
 
 
+  setupTargetLock() {
+    // Create target lock system
+    this.targetLockSystem = new TargetLockSystem(this.scene, this.camera, {
+      optimalDistance: 2.5,
+      minDistance: 1.5,
+      maxDistance: 4.0,
+      softColliderRadius: 2.0
+    });
+    
+    console.log("🎯 Target lock system initialized");
+  }
+  
   setupController() {
     // Create controller with config
     this.controller = new RacalvinController({
@@ -434,6 +454,7 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
       <strong>Movement:</strong><br>
       W/S - Forward/Back<br>
       A/D - Turn Left/Right<br>
+      Q/E - Strafe Left/Right<br>
       Shift - Run / Roll<br>
       Space - Jump<br>
       <br>
@@ -442,6 +463,7 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
       Right Click (Hold) - Block<br>
       Tab - Lock Target<br>
       X - Cycle Targets<br>
+      F - Interact<br>
       <br>
       <strong>Dodge Rolls:</strong><br>
       Double-tap A - Roll Left<br>
@@ -449,7 +471,7 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
       Shift + W - Roll Forward<br>
       <br>
       <strong>Camera:</strong><br>
-      Mouse - Look Around<br>
+      Mouse (Hold RMB) - Free Look<br>
       I/K - Pitch Up/Down<br>
       J/L - Turn Left/Right<br>
     `;
@@ -634,10 +656,26 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
       this.warriorMixer.update(delta);
     }
 
-    // Update target lock indicators
-    if (this.targetLockSystem) {
-      this.targetLockSystem.update();
-    }
+      // Update target lock indicators with player position
+      if (this.targetLockSystem) {
+        const playerPos = this.controller.getPosition();
+        this.targetLockSystem.update(delta, playerPos);
+        
+        // Apply soft collider if target is locked
+        const lockedTarget = this.controller.getLockedTarget();
+        if (lockedTarget && lockedTarget.position) {
+          const pushForce = this.targetLockSystem.calculateSoftCollider(
+            playerPos,
+            lockedTarget.position
+          );
+          
+          // Apply gentle push/pull to maintain optimal distance
+          if (pushForce.lengthSq() > 0.001) {
+            this.controller.character.position.x += pushForce.x * delta;
+            this.controller.character.position.z += pushForce.z * delta;
+          }
+        }
+      }
 
     // Update combat system
     if (this.combatSystem) {
@@ -659,6 +697,9 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
     // Map controller state to loaded animations
     const stateMap = {
       idle: "idle",
+      idle2: "idle2",
+      idle3: "idle3",
+      idle4: "idle4",
       Idle: "idle",
       walk: "walk",
       Walk: "walk",
@@ -669,8 +710,9 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
       Jump: "jump",
       double_jump: "jump",
       triple_jump: "jump",
-      fall: "jump", // Use jump animation for falling
-      land: "idle",
+      fall: "fall", // Falling animation
+      land: "land", // Landing animation
+      Land: "land",
       attack1: "slash1", // LMB Combo: Slash 1
       Attack: "slash1",
       attack2: "slash2", // LMB Combo: Slash 2
@@ -795,10 +837,10 @@ import { AnimationDebugUI } from "../ui/AnimationDebugUI.js";
 }
 
 // Export the class
-export default WarriorCombatDemo;
+export default EnhancedWarriorDemo;
 
 // Auto-start the demo
-const demo = new WarriorCombatDemo();
+const demo = new EnhancedWarriorDemo();
 
 // Expose for debugging
 window.demo = demo;

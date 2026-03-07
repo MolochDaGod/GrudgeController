@@ -322,32 +322,39 @@ export class RacalvinController {
     this.animationMapper = new AnimationMapper();
     console.log('✓ AnimationMapper initialized');
     
-    // Physics system with Rapier.js
+    // Physics system with Rapier.js (optional - degrades gracefully if WASM fails)
     if (this.config.enablePhysics) {
-      this.physicsSystem = new PhysicsSystem({
-        lightImpactSpeed: this.config.lightImpactSpeed,
-        mediumImpactSpeed: this.config.mediumImpactSpeed,
-        heavyImpactSpeed: this.config.heavyImpactSpeed,
-        ragdollThreshold: this.config.heavyImpactSpeed,
-      });
-      
-      await this.physicsSystem.init();
-      
-      // Add character to physics
-      if (characterMesh) {
-        this.physicsSystem.addCharacter(characterMesh, {
-          mass: 70,
-          radius: this.config.characterRadius,
-          height: 1.8,
-          isKinematic: true // Player controlled
+      try {
+        this.physicsSystem = new PhysicsSystem({
+          lightImpactSpeed: this.config.lightImpactSpeed,
+          mediumImpactSpeed: this.config.mediumImpactSpeed,
+          heavyImpactSpeed: this.config.heavyImpactSpeed,
+          ragdollThreshold: this.config.heavyImpactSpeed,
         });
         
-        // Setup collision callback
-        characterMesh.userData.onCollision = (event) => this.handlePhysicsCollision(event);
+        await this.physicsSystem.init();
+        
+        // Add character to physics
+        if (characterMesh) {
+          this.physicsSystem.addCharacter(characterMesh, {
+            mass: 70,
+            radius: this.config.characterRadius,
+            height: 1.8,
+            isKinematic: true // Player controlled
+          });
+          
+          // Setup collision callback
+          characterMesh.userData.onCollision = (event) => this.handlePhysicsCollision(event);
+        }
+        
+        console.log('✓ PhysicsSystem initialized with Rapier.js');
+        this.physicsInitialized = true;
+      } catch (physicsError) {
+        console.warn('⚠ PhysicsSystem failed to initialize (WASM may not be available):', physicsError.message);
+        console.warn('  Demo will continue without physics-based collision.');
+        this.physicsSystem = null;
+        this.physicsInitialized = false;
       }
-      
-      console.log('✓ PhysicsSystem initialized with Rapier.js');
-      this.physicsInitialized = true;
     }
     
     console.log('🎮 All production systems initialized!');

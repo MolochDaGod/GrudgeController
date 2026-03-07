@@ -10,7 +10,7 @@ export default defineConfig({
   
   // Build optimization
   build: {
-    target: 'es2015',
+    target: 'esnext', // Required for @dimforge/rapier3d-compat WASM + top-level await
     minify: 'terser',
     sourcemap: true,
     
@@ -43,11 +43,12 @@ export default defineConfig({
   },
   
   // Asset handling
-  assetsInclude: ['**/*.fbx', '**/*.glb', '**/*.gltf'],
+  assetsInclude: ['**/*.fbx', '**/*.glb', '**/*.gltf', '**/*.wasm'],
   
   // Optimization
   optimizeDeps: {
-    include: ['three', 'cannon-es', 'howler', 'stats.js', 'tweakpane']
+    include: ['three', 'cannon-es', 'howler', 'stats.js', 'tweakpane'],
+    exclude: ['@dimforge/rapier3d-compat'] // Let rapier handle its own WASM loading
   },
   
   // Environment variables

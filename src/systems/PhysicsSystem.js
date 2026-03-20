@@ -52,15 +52,13 @@ export class PhysicsSystem {
             this.rapier = await RAPIER.init();
             
             // Create physics world with gravity
-            const gravity = new RAPIER.Vector3(
-                this.config.gravity.x,
-                this.config.gravity.y,
-                this.config.gravity.z
-            );
-            this.world = new RAPIER.World(gravity);
+            this.world = new RAPIER.World({
+                x: this.config.gravity.x,
+                y: this.config.gravity.y,
+                z: this.config.gravity.z
+            });
             
-            // Enable continuous collision detection
-            this.world.integrationParameters.allowedLinearError = 0.001;
+            // Note: integrationParameters API varies by Rapier version
             
             this.initialized = true;
             console.log('✅ PhysicsSystem initialized with Rapier.js');
@@ -104,8 +102,7 @@ export class PhysicsSystem {
         const colliderDesc = RAPIER.ColliderDesc.capsule(height / 2 - radius, radius)
             .setMass(mass)
             .setFriction(friction)
-            .setRestitution(restitution)
-            .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+            .setRestitution(restitution);
 
         const collider = this.world.createCollider(colliderDesc, rigidBody);
 
@@ -134,8 +131,8 @@ export class PhysicsSystem {
 
         // Create static rigid body
         const position = mesh.position;
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed()
-            .setTranslation(position.x, position.y, position.z);
+        const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
+        rigidBodyDesc.setTranslation(position.x, position.y, position.z);
         
         const rigidBody = this.world.createRigidBody(rigidBodyDesc);
 
@@ -331,11 +328,11 @@ export class PhysicsSystem {
         }
 
         // Apply impulse
-        const impulse = new RAPIER.Vector3(
-            direction.x * magnitude,
-            direction.y * magnitude * 0.5, // Reduced vertical knockback
-            direction.z * magnitude
-        );
+        const impulse = {
+            x: direction.x * magnitude,
+            y: direction.y * magnitude * 0.5, // Reduced vertical knockback
+            z: direction.z * magnitude
+        };
 
         if (rigidBody.bodyType() === RAPIER.RigidBodyType.Dynamic) {
             rigidBody.applyImpulse(impulse, true);
@@ -480,7 +477,7 @@ export class PhysicsSystem {
             // Kinematic bodies are controlled by code, not physics
             if (rigidBody.bodyType() === RAPIER.RigidBodyType.KinematicPositionBased) {
                 // Update physics body from mesh position
-                rigidBody.setNextKinematicTranslation(mesh.position);
+                rigidBody.setNextKinematicTranslation({ x: mesh.position.x, y: mesh.position.y, z: mesh.position.z });
             } else if (rigidBody.bodyType() === RAPIER.RigidBodyType.Dynamic) {
                 // Update mesh from physics body
                 const translation = rigidBody.translation();

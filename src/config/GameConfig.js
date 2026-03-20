@@ -7,8 +7,8 @@
 
 export const GAME_CONFIG = {
   // Project info
-  projectName: "Warrior Combat Demo",
-  version: "1.0.0",
+  projectName: "Grudge Controller",
+  version: "2.1.0",
 
   // File paths (customize for your project)
   paths: {

@@ -1,7 +1,7 @@
 {
-  "name": "racalvin-combat-system",
-  "version": "2.0.0",
-  "description": "Modular Three.js combat system with target locking, tank controls, and dynamic weapons - Ready for Puter Apps",
+  "name": "grudge-controller",
+  "version": "2.1.0",
+  "description": "Grudge Controller - Modular Three.js combat system with target locking, tank controls, and dynamic weapons",
   "main": "index.html",
   "type": "module",
   "scripts": {
@@ -34,9 +34,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/racalvin-combat-system"
+    "url": "https://github.com/MolochDaGod/GrudgeController"
   },
-  "author": "Racalvin Combat Team",
+  "author": "Grudge Studio",
   "license": "MIT",
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.3",
@@ -49,6 +49,7 @@
   "devDependencies": {
     "@vitest/ui": "^4.0.17",
     "eslint": "^9.39.2",
+    "globals": "^17.4.0",
     "http-server": "^14.1.1",
     "prettier": "^3.8.0",
     "terser": "^5.46.0",

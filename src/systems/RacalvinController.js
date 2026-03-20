@@ -1794,6 +1794,10 @@ export class RacalvinController {
     return "roll_left";
   }
 
+  getPosition() {
+    return this.character.position;
+  }
+
   getLockedTarget() {
     return this.character.lockedTarget;
   }

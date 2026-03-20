@@ -717,26 +717,26 @@ export class EnhancedWarriorDemo {
       this.warriorMixer.update(delta);
     }
 
-      // Update target lock indicators with player position
-      if (this.targetLockSystem) {
-        const playerPos = this.controller.getPosition();
-        this.targetLockSystem.update(delta, playerPos);
+    // Update target lock indicators with player position
+    if (this.controller && this.targetLockSystem) {
+      const playerPos = this.controller.getPosition();
+      this.targetLockSystem.update(delta, playerPos);
+      
+      // Apply soft collider if target is locked
+      const lockedTarget = this.controller.getLockedTarget();
+      if (lockedTarget && lockedTarget.position && playerPos) {
+        const pushForce = this.targetLockSystem.calculateSoftCollider(
+          playerPos,
+          lockedTarget.position
+        );
         
-        // Apply soft collider if target is locked
-        const lockedTarget = this.controller.getLockedTarget();
-        if (lockedTarget && lockedTarget.position) {
-          const pushForce = this.targetLockSystem.calculateSoftCollider(
-            playerPos,
-            lockedTarget.position
-          );
-          
-          // Apply gentle push/pull to maintain optimal distance
-          if (pushForce.lengthSq() > 0.001) {
-            this.controller.character.position.x += pushForce.x * delta;
-            this.controller.character.position.z += pushForce.z * delta;
-          }
+        // Apply gentle push/pull to maintain optimal distance
+        if (pushForce.lengthSq() > 0.001) {
+          this.controller.character.position.x += pushForce.x * delta;
+          this.controller.character.position.z += pushForce.z * delta;
         }
       }
+    }
 
     // Update combat system
     if (this.combatSystem) {

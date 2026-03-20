@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import RAPIER from '@dimforge/rapier3d-compat';
+
+// Rapier loaded dynamically to avoid WASM crash if unavailable
+let RAPIER = null;
 
 /**
  * PhysicsSystem - Handles physics simulation, collision detection, and ragdoll mechanics
@@ -48,8 +50,10 @@ export class PhysicsSystem {
         if (this.initialized) return;
         
         try {
-            // Initialize Rapier WASM module
-            this.rapier = await RAPIER.init();
+            // Dynamically import Rapier WASM module
+            const rapierModule = await import('@dimforge/rapier3d-compat');
+            RAPIER = rapierModule.default || rapierModule;
+            await RAPIER.init();
             
             // Create physics world with gravity
             this.world = new RAPIER.World({
@@ -57,8 +61,6 @@ export class PhysicsSystem {
                 y: this.config.gravity.y,
                 z: this.config.gravity.z
             });
-            
-            // Note: integrationParameters API varies by Rapier version
             
             this.initialized = true;
             console.log('✅ PhysicsSystem initialized with Rapier.js');

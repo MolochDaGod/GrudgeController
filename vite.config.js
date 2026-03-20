@@ -27,7 +27,6 @@ export default defineConfig({
         manualChunks: {
           'three': ['three'],
           'cannon': ['cannon-es'],
-          'howler': ['howler'],
           'systems': [
             './src/systems/AudioSystem.js',
             './src/systems/ParticleSystem.js',
